@@ -1,5 +1,7 @@
-from random import shuffle
+from random import Random, shuffle
 from os import system
+
+vocabulary = None
 
 # UI
 def print_menu():
@@ -148,6 +150,9 @@ def start_test():
 def add_word(word, meaning, wordType):
     global vocabulary
 
+    if vocabulary == None:
+        raise WindowsError
+
     if wordType == 'n': # Check if the word is a noun
         article = input('Article: ')
         with open(f"vocabularies\\{vocabulary}.vcb", "a", encoding="utf-8") as file:
@@ -162,6 +167,12 @@ def add_word(word, meaning, wordType):
         print('Invalid word type')
 
 def Option_SelectVocabulary():
+    system("cls")
+    print() # Empty Line
+    print('-------------------')
+    print(" Select Vocabulary ")
+    print('-------------------')
+    print() # Empty Line
     select_vocabulary(input('Vocabulary name: '))
     print() # Empty Line
     input("Press the 'Enter' key to continue")
@@ -169,9 +180,11 @@ def Option_SelectVocabulary():
     print_menu()
     
 def Option_StartTest():
+    system("cls")
     try:
         start_test()
     except:
+        print() # Empty Line
         print("This vocabulary is empty!")
     print() # Empty Line
     input("Press the 'Enter' key to continue")
@@ -179,11 +192,21 @@ def Option_StartTest():
     print_menu()
 
 def Option_AddWord():
+    system("cls")
+    print() # Empty Line
+    print('--------------------')
+    print("     Add A Word     ")
+    print('--------------------')
+
     # Ask for word info
     word = input('Word: ')
     meaning = input('Meaning: ')
     wordType = input('Type (n, v, a): ')
-    add_word(word, meaning, wordType)
+    try:
+        add_word(word, meaning, wordType)
+    except:
+        print() # Empty Line
+        print("No vocabulary selected!")
 
     print() # Empty line
     input("Press the 'Enter' key to continue")
@@ -191,6 +214,11 @@ def Option_AddWord():
     print_menu()
 
 def Option_CreateVocabulary():
+    system("cls")
+    print('-------------------')
+    print(" Create Vocabulary ")
+    print('-------------------')
+
     create_vocabulary(input("Vocabulary Name: "))
 
     print() # Empty line
