@@ -144,8 +144,6 @@ def start_test():
         print(f'Score: {percentage}') # Print the score as a percentage
         print() # Empty line
 
-
-
 # Manually Add new word to the selected vocabulary
 def add_word(word, meaning, wordType):
     global vocabulary
