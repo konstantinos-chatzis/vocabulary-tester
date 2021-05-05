@@ -1,101 +1,41 @@
+import mysql.connector
 from random import shuffle
 from os import system
 
-# UI
-def print_menu():
-	print() # Empty Line
-	print('===================')
-	print('-------Menu--------')
-	print('===================')
-	print('\nWhat do you want to do?')
-	print('\n1 - Select A Vocabulary \n2 - Start Test \n3 - Add A Word To The Vocabulary \n4 - Create A New Vocabulary \n5 - Exit')
-	print() # Empty Line
+# Initialize database
+db = mysql.connector.connect(host="localhost", user="root", passwd="2468123")
+cur = db.cursor(buffered=True)
 
-# Select a vocabulary
-def select_vocabulary(name):
-    global allWords, wordCount, vocabulary
+# Update database
+def SelectDatabase(name):
+    global cur, db
+    db = mysql.connector.connect(host="localhost", user="root", passwd="2468123", database=name) # Select the database (vocabulary) to use
+    cur = db.cursor(buffered=True)
 
-    try:
-        vocabulary = name
+# Create a new database (vocabulary)
+def CreateDatabase(name):
+    cur.execute(f"CREATE DATABASE {name}")
+    cur.execute(f"USE {name}")
+    cur.execute("CREATE TABLE nouns (article VARCHAR(3), word VARCHAR(45), meaning VARCHAR(45) )")
+    cur.execute("CREATE TABLE verbs (word VARCHAR(45), meaning VARCHAR(45) )")
+    cur.execute("CREATE TABLE adjectives (word VARCHAR(45), meaning VARCHAR(45) )")
 
-        allWords = [] # Define the allWords list
 
-        with open(f"vocabularies\\{name}.vcb", 'r', encoding='utf-8') as f: # Open the selected file
-            for line in f: # Loop through every line of the file
-                splitted = line.split() # Split the words of the line to a list
-                type = splitted[0] # Set the type of the word to the type in the line (index[0])
-                if type == 'n': # If the word is a noun
-                    equalSignIndex = splitted.index('=') # Get the index of the '=' sign on the line
-                    itemList = []
-                    article = splitted[1] # Set the article to the article in the line (index[1])
-                    main_word = splitted[2] # Set the article to the article in the line (index[1])
-                    meaning = "" # Avoid Unbound Error
-                    for i in range(equalSignIndex + 1, len(splitted)): # Loop throuh every word after the '=' sign
-                        itemList.append(str(splitted[i]))
-                        meaning = ' '.join(itemList)
-                        meaning = meaning.replace(main_word, '')
-                        meaning = meaning.lstrip() # Remove whitespace at the beginning
+def StartTest():
+    wordTypes = ['adjectives', 'nouns', 'verbs'] # Declare all the available word types
 
-                    word = [article, main_word, meaning] # Define the final word list with the article, main_word part, and the meaning 
-                    allWords.append(word) # Add the word to the allWords list
-                elif type == 'v': # If the word is a verb
-                    equalSignIndex = splitted.index('=') # Get the index of the '=' sign on the line
-                    itemList = []
-
-                    meaning = "" # Avoid Unbound Error
-                    main_word = "" # Avoid Unbound Error
-
-                    # Word Selection
-                    for i in range(1,equalSignIndex): # Loop through every number before the '=' sign index
-                        itemList.append(str(splitted[i])) # Append the word of the current index to the list
-                        main_word = ' '.join(itemList) # Combine all the words together
-                    # Meaning Selection
-                    for i in range(equalSignIndex + 1, len(splitted)): # Loop throuh every word after the '=' sign
-                        itemList.append(str(splitted[i])) #
-                        meaning = ' '.join(itemList)
-                        meaning = meaning.replace(main_word, '')
-                        meaning = meaning.lstrip() # Remove whitespace at the beginning
-
-                    word = [main_word, meaning] # Define the final word list with the main_word part, and the meaning
-                    allWords.append(word) # Add the word to the allWords list
-                elif type == 'a': # If the word is an adjective
-                    equalSignIndex = splitted.index('=')
-                    itemList = []
-                    meaning = "" # Avoid Unbound Error
-                    main_word = "" # Avoid Unbound Error
-                    for i in range(1,equalSignIndex):
-                        itemList.append(str(splitted[i]))
-                        main_word = ' '.join(itemList)
-                    for i in range(equalSignIndex + 1, len(splitted)):
-                        itemList.append(str(splitted[i]))
-                        meaning = ' '.join(itemList)
-                        meaning = meaning.replace(main_word, '')
-                        meaning = meaning.lstrip() # Remove whitespace at the beginning
-
-                    word = [main_word, meaning] # Define the final word list with the main_word part, and the meaning
-                    allWords.append(word) # Add the word to the allWords list
-
-        # Put all words to a list and count them
-        wordCount = 0
-        for word in allWords: # Loop through every word in the allWords list
-            wordCount += 1
-        shuffle(allWords) # Mix up the elements of the list (all the words)
-    
-    except:
-        print() # Empty Line
-        print(f"Vocabulary {name} was not found")
-
-# Create a new vocabulary
-def create_vocabulary(name):
-    # Create the new vocabulary file
-    with open(f"vocabularies\\{name}.vcb", "w"):
+    with open ('C:\\Users\\chatzis\\Desktop\\correction.txt', 'w', encoding="utf-8"): # Erase the 'Mistakes' file 
         pass
-    
-    #Select the new vocabulary file
-    select_vocabulary(name)
 
-def start_test():
-    global allWords, wordCount
+    # Put all words to a list and count them
+    allWords = []
+    wordCount = 0
+    for wordType in wordTypes: # Lopp through all word types
+        cur.execute("SELECT * FROM " + wordType) # Select all the columns from the 'wordType' table
+        for word in cur: # Loop through every word in the cursor output
+            allWords.append(list(word)) # Append the word to the list
+            wordCount += 1
+    shuffle(allWords) # Mix up the elements of the list (all the words)
 
     # Ask a word from the list
     correctAnswers = [] # Define the user's correct answers 
@@ -126,94 +66,93 @@ def start_test():
                 correctAnswers.append(word) # Append the correct word to the correct answers list
             
     # Calculate result
-    percentage = f'{round(len(correctAnswers) / len(allWords) * 100)}%' # Calculate the percentage of the correct answers
+    percentage = f'{int(len(correctAnswers) / len(allWords) * 100)}%' # Calculate the percentage of the correct answers
     if incorrectAnswers != []: # If the incorrectAnswers list is not empty
         print('---Correction---')
         print() # Empty line
-
-        for incorrectAnswer in incorrectAnswers: # Loop through every incorrect answer in the incorrectAnswers list
-            if (incorrectAnswer[0] == 'der') or (incorrectAnswer[0] == 'die') or (incorrectAnswer[0] == 'das'): # If the incorrectAnswer is a noun
-                print(f'{incorrectAnswer[2]} = {incorrectAnswer[0]} {incorrectAnswer[1]}') # Print the correction of the noun ('meaning' = 'article' 'word')
-                print() # Empty line
-            else: # If the incorrectAnswer is not a noun
-                print(f'{incorrectAnswer[1]} = {incorrectAnswer[0]}')
-                print() # Empty line
-
         print(f'Score: {percentage}') # Print the score as a percentage
         print() # Empty line
+        with open ('C:\\Users\\chatzis\\Desktop\\correction.txt', 'a', encoding="utf-8") as file:
+            for incorrectAnswer in incorrectAnswers: # Loop through every incorrect answer in the incorrectAnswers list
+                if (incorrectAnswer[0] == 'der') or (incorrectAnswer[0] == 'die') or (incorrectAnswer[0] == 'das'): # If the incorrectAnswer is a noun
+                    print(f'{incorrectAnswer[2]} = {incorrectAnswer[0]} {incorrectAnswer[1]}') # Print the correction of the noun ('meaning' = 'article' 'word')
+                    print() # Empty line
+                    file.write(f'{incorrectAnswer[2]} = {incorrectAnswer[0]} {incorrectAnswer[1]}') # Print the correction to a file
+                    file.write("%s\n" % '')
+                else: # If the incorrectAnswer is not a noun
+                    print(f'{incorrectAnswer[1]} = {incorrectAnswer[0]}')
+                    print() # Empty line
+                    file.write(f'{incorrectAnswer[1]} = {incorrectAnswer[0]}')# Print the correction to a file
+                    file.write("%s\n" % '')
 
+    input("Press the 'Enter' key to continue")
+    system('cls')
+    PrintMenu()
 
-
-# Manually Add new word to the selected vocabulary
-def add_word(word, meaning, wordType):
-    global vocabulary
-
+# Manually Add new word to the vocabulary
+def AddNewWords(word, meaning, wordType, article):
     if wordType == 'n': # Check if the word is a noun
-        article = input('Article: ')
-        with open(f"vocabularies\\{vocabulary}.vcb", "a", encoding="utf-8") as file:
-            file.write(f"n {article} {word} = {meaning}\n")
+        args = (article, word, meaning)
+        cur.execute("INSERT INTO nouns VALUES (%s,%s, %s)", args)
     elif wordType == 'v': # Check if the word is a verb
-        with open(f"vocabularies\\{vocabulary}.vcb", "a", encoding="utf-8") as file:
-            file.write(f"v {word} = {meaning}\n")
+        args = (word, meaning)
+        cur.execute("INSERT INTO verbs VALUES (%s,%s)", args)
     elif wordType == 'a': # Check if the word is a adjective
-        with open(f"vocabularies\\{vocabulary}.vcb", "a", encoding="utf-8") as file:
-            file.write(f"a {word} = {meaning}\n")
-    else:
-        print('Invalid word type')
-
-def Option_SelectVocabulary():
-    select_vocabulary(input('Vocabulary name: '))
-    print() # Empty Line
-    input("Press the 'Enter' key to continue")
-    system("cls")
-    print_menu()
-    
-def Option_StartTest():
-    try:
-        start_test()
-    except:
-        print("This vocabulary is empty!")
-    print() # Empty Line
-    input("Press the 'Enter' key to continue")
-    system('cls')
-    print_menu()
-
-def Option_AddWord():
-    # Ask for word info
-    word = input('Word: ')
-    meaning = input('Meaning: ')
-    wordType = input('Type (n, v, a): ')
-    add_word(word, meaning, wordType)
-
-    print() # Empty line
-    input("Press the 'Enter' key to continue")
-    system('cls')
-    print_menu()
-
-def Option_CreateVocabulary():
-    create_vocabulary(input("Vocabulary Name: "))
-
-    print() # Empty line
-    input("Press the 'Enter' key to continue")
-    system('cls')
-    print_menu()
-
-print_menu()
-
-# Command line
-while True:
-    command = ''
-    command = input("Tester> ")
-    if command == '1':
-        Option_SelectVocabulary()
-    elif command == '2':
-        Option_StartTest()
-    elif command == '3':
-        Option_AddWord()
-    elif command == '4':
-        Option_CreateVocabulary()
-    elif command == "5":
-        raise Exception('Program terminated by user operation')
+        args = (word, meaning)
+        cur.execute("INSERT INTO adjectives VALUES (%s,%s)", args)
     else:
         print('Invalid argument')
-        print_menu()
+
+    db.commit()
+
+# Automatically Add new word to the vocabulary
+def AutoAddNewWords():
+    global cur, db
+
+    with open(file, 'r', encoding='utf-8') as f: # Open the selected file
+        for line in f: # Loop through every line of the file
+            splitted = line.split() # Split the words of the line to a list
+            type = splitted[0] # Set the type of the word to the type in the line (index[0])
+            if type == 'n': # If the word is a noun
+                equalSignIndex = splitted.index('=') # Get the index of the '=' sign on the line
+                itemList = []
+                article = splitted[1] # Set the article to the article in the line (index[1])
+                word = splitted[2] # Set the article to the article in the line (index[1])
+                for i in range(equalSignIndex + 1, len(splitted)): # Loop throuh every word after the '=' sign
+                    itemList.append(str(splitted[i])) #
+                    meaning = ' '.join(itemList)
+                    meaning = meaning.replace(word, '')
+                    meaning = meaning.lstrip() # Remove whitespace at the beginning
+                args = (article, word, meaning)
+                cur.execute("INSERT INTO nouns VALUES (%s,%s, %s)", args) # Add the word to the 'nouns' table
+            elif type == 'v': # If the word is a verb
+                equalSignIndex = splitted.index('=') # Get the index of the '=' sign on the line
+                itemList = []
+                # Word Selection
+                for i in range(1,equalSignIndex): # Loop through every number before the '=' sign index
+                    itemList.append(str(splitted[i])) # Append the word of the current index to the list
+                    word = ' '.join(itemList) # Combine all the words together
+                # Meaning Selection
+                for i in range(equalSignIndex + 1, len(splitted)): # Loop throuh every word after the '=' sign
+                    itemList.append(str(splitted[i])) #
+                    meaning = ' '.join(itemList)
+                    meaning = meaning.replace(word, '')
+                    meaning = meaning.lstrip() # Remove whitespace at the beginning
+
+                args = (word, meaning)
+                cur.execute("INSERT INTO verbs VALUES (%s,%s)", args)
+            elif type == 'a': # If the word is an adjective
+                equalSignIndex = splitted.index('=')
+                itemList = []
+                for i in range(1,equalSignIndex):
+                    itemList.append(str(splitted[i]))
+                    word = ' '.join(itemList)
+                for i in range(equalSignIndex + 1, len(splitted)):
+                    itemList.append(str(splitted[i]))
+                    meaning = ' '.join(itemList)
+                    meaning = meaning.replace(word, '')
+                    meaning = meaning.lstrip() # Remove whitespace at the beginning
+
+                args = (word, meaning)
+                cur.execute("INSERT INTO verbs VALUES (%s,%s)", args)
+    db.commit()
