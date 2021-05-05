@@ -146,5 +146,4 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
-__pycache__/tester_gui.cpython-38.pyc
 *.pyc
