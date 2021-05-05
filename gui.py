@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import filedialog
 import tkinter.font as font
-from tester_gui import SelectDatabase, AutoAddNewWords, AddNewWords, StartTest, CreateDatabase
+from tester import SelectDatabase, AutoAddNewWords, AddNewWords, StartTest, CreateDatabase
 
 root = Tk()
 root.resizable(False, False)
