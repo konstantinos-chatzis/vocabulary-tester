@@ -1,4 +1,4 @@
-from random import Random, shuffle
+from random import shuffle
 from os import system
 
 vocabulary = None
