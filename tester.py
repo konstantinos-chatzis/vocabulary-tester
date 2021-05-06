@@ -164,6 +164,8 @@ def add_word(word, meaning, wordType):
     else:
         print('Invalid word type')
 
+# Console Menu
+
 def Option_SelectVocabulary():
     system("cls")
     print() # Empty Line
@@ -241,5 +243,6 @@ while True:
     elif command == "5":
         raise Exception('Program terminated by user operation')
     else:
+        system("cls")
         print('Invalid argument')
         print_menu()
